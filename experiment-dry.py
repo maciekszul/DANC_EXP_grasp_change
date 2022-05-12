@@ -1,4 +1,4 @@
-import pyfirmata
+from pyfirmata2 import Arduino
 import time
 from psychopy import core
 from psychopy import visual
@@ -20,7 +20,8 @@ from utilities import files
 
 exp_beginning = core.getTime() # time
 
-board = pyfirmata.Arduino("COM3")
+PORT = Arduino.AUTODETECT
+board = Arduino(PORT)
 
 ########### the parallel port triggering ############
 
