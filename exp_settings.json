@@ -1,0 +1,23 @@
+{
+    "positions": {
+        "0" : ["pinch", 30],
+        "6"  : ["palm", 30],
+        "12" : ["pinch", 60],
+        "18" : ["palm", 60],
+        "24" : ["pinch", 90],
+        "30" : ["palm", 90]
+    },
+    "gpios": [3, 4, 5, 6],
+    "time_step": 0.1,
+    "runs": 2,
+    "trials_per_run": 60,
+    "init_time": 5,
+    "dump_dur": 5,
+    "grasp_dur": 4,
+    "output_folder": "data",
+    "monitor": "office",
+    "instructions": [
+        "PRESS SPACE TO CONTINUE"
+    ]
+}
+
