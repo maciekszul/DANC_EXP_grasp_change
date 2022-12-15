@@ -8,6 +8,8 @@ warnings.filterwarnings(
     category=UserWarning
 )
 
+
+
 class Carousel:
     def __init__(self, sampling_rate=100, port="auto", motor=[3, 4, 5, 6], flap=2):
         self.sampling_rate = sampling_rate
@@ -32,14 +34,13 @@ class Carousel:
         self.ir_led.write(True)
         self.ir_rec = self.board.get_pin(rec_pin)
         self.ir_rec.enable_reporting()
-        self.mean_ir_test = 0
-        pass
+
 
     def ir(self):
         return self.ir_rec.read()
     
     def ir_test(self, t=2, true_output=False):
-        mean_signal = []
+
         if true_output:
             start_time = time.time()
             while time.time() - start_time <= t:
@@ -60,14 +61,11 @@ class Carousel:
                 try:
                     signal = self.ir()
                     if signal != None:
-                        mean_signal.append(signal)
                         signal = int(signal*300)
                         print(":" + "|"*signal)
                     time.sleep(0.2)
                 except KeyboardInterrupt:
                     break
-        mean_signal = np.mean(mean_signal)
-        self.mean_ir_test = mean_signal
 
     
     def all_valves_off(self):
@@ -130,6 +128,41 @@ class Counter():
     def in_stop(self):
         return self.pos in self.stops
     
+
+    def generate_run(self, reps):
+        if reps % 2 == 0:
+            positions = np.tile(self.stops, reps)
+            iters = 0
+            while True:
+                iters += 1
+                print(iters, end="\r")
+                np.random.shuffle(positions)
+                if all(positions[:-1] != positions[1:]):
+                    break
+            cues = np.zeros(positions.shape)
+            for pos in self.stops:
+                pos_ix = np.where(positions == pos)[0]
+                sub_cues = np.hstack([
+                    np.ones(int(pos_ix.shape[0]/2)),
+                    np.zeros(int(pos_ix.shape[0]/2))
+                ])
+                while True:
+                    iters += 1
+                    print(iters, end="\r")
+                    np.random.shuffle(sub_cues)
+                    if all(sub_cues[:-1] != sub_cues[1:]):
+                        break
+                cues[pos_ix] = sub_cues
+            trial_sequence = np.vstack([positions, cues]).transpose()
+            trial_sequence = np.vstack([
+                np.append(trial_sequence[:,0], trial_sequence[-1,0]),
+                np.insert(trial_sequence[:,1], 0, trial_sequence[0,1])
+            ]).transpose()
+            return trial_sequence.astype(int)
+        else:
+            print("{} repetitions, has to be an odd number".format(reps))
+        
+
 
 class Mover():
     def __init_(self):

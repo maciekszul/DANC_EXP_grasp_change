@@ -17,13 +17,19 @@ mover.add_classes(carousel, counter)
 mover.calibration()
 
 # moving to different positions
-trials = np.tile(counter.stops, 10)
-np.random.shuffle(trials)
+trial_sequence = counter.generate_run(2)
 
-for target in trials:
+print(trial_sequence)
+
+for trial, target in enumerate(trial_sequence[:-1,0]):
+    print("trial", trial+1, "cue", trial_sequence[trial, 1])
     mover.move_to_target(target)
+    carousel.flap_up()
     time.sleep(1)
+    carousel.flap_down()
     print("\n")
+
+
 
 
 carousel.all_valves_off()

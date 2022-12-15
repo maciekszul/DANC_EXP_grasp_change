@@ -131,6 +131,35 @@ except:
 
 ############ the parallel port triggering #############
 
+################### TCP CONNECTION ####################
+tcp_yn = ("Do you want a TCP connection? (y/n)")
+tcp_on = False
+if tcp_yn == "y":
+    tcp_on = True
+    # TCP_IP = "169.254.226.95"
+    TCP_IP = "100.1.1.3"
+    TCP_PORT = 5005
+    buffer_size = 1024
+
+    # setting up the connection
+    print("waiting for the video computer to init")
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(999)
+    s.bind((TCP_IP, TCP_PORT))
+    s.listen(1)
+    conn, addr = s.accept()
+
+    print("CONNECTION ADDRESS:", addr)
+
+    # waiting for the client to initialize and connect
+    while True:
+        data = conn.recv(buffer_size)
+        if data.decode() == "connected":
+            print("video PC ready and connected")
+            break
+else:
+    pass
+
 ################## monitor settings ###################
 monitors_ = {
     "office": [1920, 1080, 52.70, 29.64, 56],
@@ -249,6 +278,8 @@ mover.move_to_target(trial_sequence[0, 0])
 while timer.getTime() > 0:
     if event.getKeys(keyList=["escape"], timeStamped=False):
         message_finish = "exit_stop"
+        if tcp_on:
+            conn.send(message_finish.encode())
         win.close()
         carousel.stop_all()
         core.quit()

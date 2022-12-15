@@ -37,15 +37,19 @@ except:
     while True:
         pp_dd = input("continue? (y/n)")
         if pp_dd == "y":
+            port = []
+            def trigger(send_bit):
+                print("trigger", send_bit, "no port")
             break
         if pp_dd == "n":
+            def trigger(send_bit):
+                print("trigger", send_bit, "no port")
             core.quit()
         else:
+            def trigger(send_bit):
+                print("trigger", send_bit, "no port")
             continue
 
-    port = []
-    def trigger(send_bit):
-        print("trigger", send_bit, "no port")
 #####################################################
 
 ############ TCP connection #########################

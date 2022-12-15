@@ -10,7 +10,7 @@
     "gpios": [3, 4, 5, 6],
     "time_step": 0.1,
     "runs": 2,
-    "trials_per_run": 60,
+    "reps_per_run": 4,
     "init_time": 5,
     "dump_dur": 5,
     "grasp_dur": 4,
