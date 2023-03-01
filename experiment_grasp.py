@@ -44,10 +44,14 @@ grasp_dur = params["grasp_dur"]
 output_folder = params["output_folder"]
 which_monitor = params["monitor"]
 instructions = params["instructions"]
+conditions = params["positions"]
+
+conditions = {int(i): conditions.get(i) for i in conditions.keys()}
+
 
 # prompt and subject data
 sub_info = {
-    "ID": "ADD_SUBJECT"
+    "ID (sub-xxx)": "ADD_SUBJECT"
 }
 
 prompt = gui.DlgFromDict(
@@ -55,7 +59,7 @@ prompt = gui.DlgFromDict(
     title="SUBJECT"
 )
 
-subject_id = sub_info["ID"]
+subject_id = sub_info["ID (sub-xxx)"]
 files.make_folder(op.join(os.getcwd(), output_folder))
 output_path = op.join(os.getcwd(), output_folder, subject_id)
 files.make_folder(output_path)
@@ -66,7 +70,7 @@ prompt = gui.DlgFromDict(
     title="MORE INFO"
 )
 
-subject_id = exp_info["ID"]
+subject_id = exp_info["ID (sub-xxx)"]
 age = exp_info["age"]
 gender = exp_info["gender (m/f/o)"]
 block = exp_info["block"]
@@ -94,7 +98,9 @@ data_log = {
     "grasp_trigger": [],
     "dump_trigger": [],
     "vid_dump_duration": [],
-    "vid_rec_duration": []
+    "vid_rec_duration": [],
+    "object_type": [],
+    "angle" : []
 }
 
 cue_cat = {
@@ -360,7 +366,7 @@ for trial_ix, (target_pos, trial_cue) in enumerate(trial_sequence[1:]):
             exp_abort()
     grasp_wait.complete()
     
-    # flap up
+    # flap closed
     cue.fillColor = "red"
     cue.lineColor = "red"
     cue.draw()
@@ -387,6 +393,23 @@ for trial_ix, (target_pos, trial_cue) in enumerate(trial_sequence[1:]):
     )
     filename = op.join(output_path, filename)
 
+    mover.move_to_target(target_pos)
+
+    vid_dump_duration = -1
+    vid_rec_duration = -1
+
+    if tcp_on:
+        while True:
+            data_raw = conn.recv(buffer_size)
+            data = data_raw.decode()
+            if "dump" in data:
+                print(data)
+                # add: vid_dump_duration from tcp
+                # add: vid_rec_duration from tcp
+                vid_dump_duration = -1
+                vid_rec_duration = -1
+                break
+    
     data_log["ID"].append(subject_id)
     data_log["age"].append(age)
     data_log["gender"].append(gender)
@@ -403,22 +426,13 @@ for trial_ix, (target_pos, trial_cue) in enumerate(trial_sequence[1:]):
     data_log["flap_trigger"].append(flap_trigger)
     data_log["grasp_trigger"].append(grasp_trigger)
     data_log["dump_trigger"].append(dump_trigger)
-    data_log["vid_dump_duration"].append(0)
-    data_log["vid_rec_duration"].append(0)
+    data_log["vid_dump_duration"].append(vid_dump_duration)
+    data_log["vid_rec_duration"].append(vid_rec_duration)
+    data_log["object_type"].append(conditions.get(target_pos)[0])
+    data_log["angle"].append(conditions.get(target_pos)[1])
 
-    pd.DataFrame.from_dict(data_log).to_csv(filename)
+    pd.DataFrame.from_dict(data_log).to_csv(filename, index=False)
 
-    mover.move_to_target(target_pos)
-
-    
-    if tcp_on:
-        while True:
-            data_raw = conn.recv(buffer_size)
-            data = data_raw.decode()
-            if "dump" in data:
-                print(data)
-                break
-    
     dump_wait.complete()
 
 

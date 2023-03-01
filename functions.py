@@ -14,7 +14,7 @@ def secondary_prompt(subject_id, output_folder):
         gender_prev = dem_data.gender.unique()[0]
         block_prev = dem_data.block.unique()[0]
         exp_info = {
-            "ID": subject_id,
+            "ID (sub-xxx)": subject_id,
             "age": age_prev,
             "gender (m/f/o)": gender_prev,
             "block": block_prev + 1
@@ -22,7 +22,7 @@ def secondary_prompt(subject_id, output_folder):
         return exp_info
     except:
         exp_info = {
-            "ID": subject_id,
+            "ID (sub-xxx)": subject_id,
             "age": "ADD_AGE",
             "gender (m/f/o)": "ADD_GENDER",
             "block": 0
