@@ -55,7 +55,7 @@ class Carousel:
                 ":|||||||||||||||||||||||||||||||||    ->    good signal\n" +
                 ":                                     ->    bad signal or blocked sensor\n"
                 )
-            time
+            
             start_time = time.time()
             while time.time() - start_time <= t:
                 try:
@@ -76,10 +76,10 @@ class Carousel:
     def valve_on(self, ix):
         self.board.digital[self.gpios["motor"][ix]].write(1)
 
-    def flap_up(self):
+    def flap_down(self):
         self.board.digital[self.gpios["flap"]].write(1)
     
-    def flap_down(self):
+    def flap_up(self):
         self.board.digital[self.gpios["flap"]].write(0)
     
     def blow(self, ix):
@@ -91,6 +91,7 @@ class Carousel:
     def stop_all(self):
         self.ir_led.write(0)
         self.ir_rec.disable_reporting()
+        self.board.exit()
 
 class Counter():
     def __init__(self, total_steps=36, stops=[0, 6, 12, 18, 24, 30], gpios=4):
@@ -170,6 +171,7 @@ class Mover():
         None - if not defined 
         """
         self.null = "null"
+        self.current_target = 0
     
     def add_classes(self, carousel, counter):
         self.carousel = carousel
@@ -179,17 +181,30 @@ class Mover():
     def calibration(self):
         while True:
             signal = self.carousel.ir()
-            if signal > 0.005:
-                self.carousel.blow(self.counter.step_fwd())
-            elif signal < 0.005:
-                self.carousel.valve_on(self.counter.valve_ix)
-                calib_pos = input("Position of a carousel: ")
-                self.counter.set_pos(int(calib_pos), self.counter.valve_ix)
-                break
-                
+            if signal != None:
+                signal = self.carousel.ir()
+                time.sleep(0.1)
+                if signal > 0.005:
+                    self.carousel.blow(self.counter.step_fwd())
+                elif signal < 0.005:
+                    calib_pos = input("Position of a carousel: ")
+                    self.counter.set_pos(int(calib_pos), self.counter.valve_ix)
+                    break
+
+
+    def signal_at_stops(self):
+        outcome = False
+        signal = self.carousel.ir()
+        if self.counter.in_stop() and signal < 0.005:
+            outcome = True
+        elif self.counter.in_stop() and signal > 0.005:
+            self.calibration()
+            self.move_to_target(self.current_target)
+        return outcome
 
     def move_to_target(self, target, printing=True):
         pos = self.counter.pos
+        self.current_target = target
         stop = target
         step_range_pos = np.hstack([
             np.arange(pos - 35, pos),
@@ -223,7 +238,7 @@ class Mover():
                 self.carousel.blow(self.counter.step_fwd())
             elif direction == -1:
                 self.carousel.blow(self.counter.step_back())
-            
+
             if printing:
                 print(
                     "dir:{} curr_pos: {} target pos: {} steps: {}/{}".format(
@@ -244,6 +259,7 @@ class Mover():
             for _click in range(3):
                 self.carousel.blow(self.counter.step_back())
                 dir_lab = "backwards"
+
                 if printing:
                     print(
                         "FAKE MOVE: dir:{} curr_pos: {} target pos: {} steps: {}/{}".format(

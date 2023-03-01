@@ -3,8 +3,8 @@ import numpy as np
 import time
 
 # init
-carousel = Carousel()
-carousel.set_sleep_time(0.15)
+carousel = Carousel(port="COM3") # COM3 only in meg
+carousel.set_sleep_time(0.2)
 carousel.init_led()
 carousel.ir_test()
 carousel.all_valves_off()
@@ -21,12 +21,15 @@ trial_sequence = counter.generate_run(2)
 
 print(trial_sequence)
 
-for trial, target in enumerate(trial_sequence[:-1,0]):
-    print("trial", trial+1, "cue", trial_sequence[trial, 1])
+for trial, (target, cond) in enumerate(trial_sequence[:-2]):
+
     mover.move_to_target(target)
-    carousel.flap_up()
     time.sleep(1)
+    mover.signal_at_stops()
+    carousel.flap_up()
+    time.sleep(3)
     carousel.flap_down()
+    time.sleep(2)
     print("\n")
 
 
